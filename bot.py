@@ -40,13 +40,13 @@ def generate_audio():
                 '-c:a', 'aac',  # Audio codec
                 '-b:a', '128k',  # Audio bitrate
                 '-f', 'flv',  # Output format
-                'rtmp://a.rtmp.youtube.com/live2/crhj-bxgg-gaze-yu6v-237q'  # Replace with your YouTube stream key
+                'rtmp://a.rtmp.youtube.com/live2/m5dp-tt7s-e18e-gze0-3gge'  # Replace with your YouTube stream key
             ]
             # Start the FFmpeg process
             ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = ffmpeg_process.communicate()
 
-            # Check for errors
+            # Check for errors and log them
             if ffmpeg_process.returncode != 0:
                 print(f"FFmpeg Error: {stderr.decode()}")
             else:
@@ -61,4 +61,5 @@ def stream_audio():
     return Response(generate_audio(), mimetype='audio/mpeg')
 
 if __name__ == '__main__':
+    print("Starting Flask server...")
     app.run(debug=True, host='0.0.0.0', port=5000)
