@@ -2,9 +2,6 @@ import os
 import random
 import time
 import subprocess
-from flask import Flask, Response
-
-app = Flask(__name__)
 
 # Path to your local music files
 MUSIC_DIR = './music_files'  # Replace this with your directory of music files
@@ -18,9 +15,12 @@ if not AUDIO_FILES:
     print("No music files found in the specified directory.")
     exit()
 
-# Function to generate live stream from local files
-def generate_audio():
-    print("Starting to generate audio stream...")  # Added logging
+# Replace with your YouTube stream URL
+stream_key = "m5dp-tt7s-e18e-gze0-3gge"  # Replace with your actual stream key
+rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{stream_key}"
+
+# Function to stream to YouTube using streamlink
+def stream_audio():
     while True:
         # Randomly select an audio file from the list
         audio_file = random.choice(AUDIO_FILES)
@@ -28,41 +28,32 @@ def generate_audio():
 
         print(f"Streaming audio: {audio_file}")
 
-        # Using FFmpeg to stream the selected file with a static image
-        try:
-            ffmpeg_command = [
-                'ffmpeg', 
-                '-re',  # Read input at native frame rate
-                '-i', audio_path,  # Input audio file
-                '-loop', '1',  # Loop the image
-                '-i', IMAGE_FILE,  # Input static image
-                '-c:v', 'libx264',  # Video codec
-                '-preset', 'veryfast',  # Encoding preset
-                '-c:a', 'aac',  # Audio codec
-                '-b:a', '128k',  # Audio bitrate
-                '-f', 'flv',  # Output format
-                'rtmp://a.rtmp.youtube.com/live2/m5dp-tt7s-e18e-gze0-3gge'  # Replace with your YouTube stream key
-            ]
-            # Start the FFmpeg process
-            ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = ffmpeg_process.communicate()
+        # Use streamlink with a static image (using FFmpeg as a backend)
+        ffmpeg_command = [
+            'streamlink', 
+            'rtmp://a.rtmp.youtube.com/live2', 
+            'audio',  # Placeholder for audio stream, streamlink would auto-connect.
+            '--hls-duration', '5',  # Adjust HLS duration
+            '--hls-segment-threads', '2', 
+            '--player-passthrough', 'ffmpeg',  # Use FFmpeg internally
+            '--ffmpeg-opts', f'-re -i {audio_path} -loop 1 -i {IMAGE_FILE} -c:v libx264 -preset veryfast -c:a aac -b:a 128k -f flv {rtmp_url}'
+        ]
 
-            # Check for errors and log them
-            if ffmpeg_process.returncode != 0:
-                print(f"FFmpeg Error: {stderr.decode()}")
-                print(f"FFmpeg Output: {stdout.decode()}")
+        # Start streaming process
+        try:
+            streamlink_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = streamlink_process.communicate()
+
+            if streamlink_process.returncode != 0:
+                print(f"Error: {stderr.decode()}")
             else:
-                print(f"Successfully streaming: {audio_file}")
+                print(f"Streaming started successfully: {audio_file}")
+
         except Exception as e:
             print(f"Error while streaming audio file {audio_file}: {e}")
 
         time.sleep(5)  # Pause for 5 seconds before switching to the next track
 
-@app.route('/stream')
-def stream_audio():
-    print("Stream route accessed!")  # Added logging to check if the route is hit
-    return Response(generate_audio(), mimetype='audio/mpeg')
-
-if __name__ == '__main__':
-    print("Starting Flask server...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# Start the stream
+if __name__ == "__main__":
+    stream_audio()
