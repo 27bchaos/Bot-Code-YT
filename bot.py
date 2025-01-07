@@ -20,6 +20,7 @@ if not AUDIO_FILES:
 
 # Function to generate live stream from local files
 def generate_audio():
+    print("Starting to generate audio stream...")  # Added logging
     while True:
         # Randomly select an audio file from the list
         audio_file = random.choice(AUDIO_FILES)
@@ -49,8 +50,9 @@ def generate_audio():
             # Check for errors and log them
             if ffmpeg_process.returncode != 0:
                 print(f"FFmpeg Error: {stderr.decode()}")
+                print(f"FFmpeg Output: {stdout.decode()}")
             else:
-                print(f"Streaming audio file: {audio_file}")
+                print(f"Successfully streaming: {audio_file}")
         except Exception as e:
             print(f"Error while streaming audio file {audio_file}: {e}")
 
@@ -58,6 +60,7 @@ def generate_audio():
 
 @app.route('/stream')
 def stream_audio():
+    print("Stream route accessed!")  # Added logging to check if the route is hit
     return Response(generate_audio(), mimetype='audio/mpeg')
 
 if __name__ == '__main__':
