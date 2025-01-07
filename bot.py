@@ -2,38 +2,58 @@ import os
 import random
 import time
 import subprocess
+import requests
 
-# Path to your local music files
-MUSIC_DIR = './music_files'  # Replace this with your directory of music files
+# Path to your static image
 IMAGE_FILE = './static_image.png'  # Replace with your image file path (static image for video)
 
-# Get list of audio files
-AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '.flac'))]
+# Google Drive File ID (replace this with your file ID from Google Drive URL)
+google_drive_audio_id = "10Dk1IwOW-p2CTzTkuCc4-JWdD_wRvtwi"  # Replace with your actual Google Drive file ID
 
-# Ensure the music directory exists
-if not AUDIO_FILES:
-    print("No music files found in the specified directory.")
-    exit()
+# URL to download the audio from Google Drive
+audio_url = f"https://drive.google.com/uc?export=download&id={google_drive_audio_id}"
 
 # Replace with your YouTube stream URL and stream key
 stream_key = "m5dp-tt7s-e18e-gze0-3gge"  # Replace with your actual stream key
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{stream_key}"
 
+# Directory for temporarily storing the downloaded audio
+MUSIC_DIR = './music_files'
+
+# Ensure the music directory exists
+if not os.path.exists(MUSIC_DIR):
+    os.makedirs(MUSIC_DIR)
+
+# Function to download audio from Google Drive and save it locally
+def download_audio(url, file_path):
+    print(f"Downloading audio from: {url}")
+    response = requests.get(url, stream=True)
+    
+    if response.status_code == 200:
+        with open(file_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print("Download complete.")
+    else:
+        print(f"Failed to download audio. Status code: {response.status_code}")
+
 # Function to stream audio with static image to YouTube via FFmpeg
 def stream_audio():
     while True:
-        # Randomly select an audio file from the list
-        audio_file = random.choice(AUDIO_FILES)
-        audio_path = os.path.join(MUSIC_DIR, audio_file)
+        # Define the audio file path
+        audio_file_path = os.path.join(MUSIC_DIR, 'song1.mp3')
 
-        print(f"Selected audio file: {audio_file}")
-        print(f"Audio path: {audio_path}")
+        # Download the audio file from Google Drive
+        download_audio(audio_url, audio_file_path)
+
+        print(f"Selected audio file: song1.mp3")
+        print(f"Audio path: {audio_file_path}")
 
         # FFmpeg command to stream audio with static image
         ffmpeg_command = [
             'ffmpeg', 
             '-re',  # Read input at native frame rate
-            '-i', audio_path,  # Input audio file
+            '-i', audio_file_path,  # Input audio file
             '-loop', '1',  # Loop the image
             '-i', IMAGE_FILE,  # Input static image
             '-c:v', 'libx264',  # Video codec
@@ -54,13 +74,13 @@ def stream_audio():
             if ffmpeg_process.returncode != 0:
                 print(f"FFmpeg Error: {stderr.decode()}")
             else:
-                print(f"Successfully started streaming: {audio_file}")
+                print(f"Successfully started streaming: song1.mp3")
             print(f"FFmpeg Output: {stdout.decode()}")
 
         except Exception as e:
-            print(f"Error while streaming audio file {audio_file}: {e}")
+            print(f"Error while streaming audio: {e}")
 
-        time.sleep(5)  # Pause for 5 seconds before switching to the next track
+        time.sleep(5)  # Pause for 5 seconds before restarting the process
 
 # Start streaming
 if __name__ == "__main__":
