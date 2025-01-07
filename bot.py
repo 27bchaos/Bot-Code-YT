@@ -8,7 +8,7 @@ STREAM_URL = "rtmp://a.rtmp.youtube.com/live2"  # YouTube RTMP server
 STREAM_KEY = "YOUR_STREAM_KEY"  # Replace with your YouTube stream key
 
 # The YouTube video URL you want to stream
-VIDEO_URL = 'https://www.youtube.com/watch?v=VuNIsY6JdUw'  # Replace with your actual video URL
+VIDEO_URL = 'https://www.youtube.com/live/oAdtRhvliHw?feature=shared'  # Replace with your actual video URL
 
 def stream_video(video_url):
     """Use yt-dlp to fetch the video stream and send it to YouTube Live using FFmpeg."""
