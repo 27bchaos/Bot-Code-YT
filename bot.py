@@ -40,7 +40,7 @@ def generate_audio():
                 '-c:a', 'aac',  # Audio codec
                 '-b:a', '128k',  # Audio bitrate
                 '-f', 'flv',  # Output format
-                'rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY'  # Replace with your YouTube stream key
+                'rtmp://a.rtmp.youtube.com/live2/crhj-bxgg-gaze-yu6v-237q'  # Replace with your YouTube stream key
             ]
             # Start the FFmpeg process
             ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
