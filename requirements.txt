@@ -1,5 +1,4 @@
-yt-dlp==2023.1.1
-google-auth==2.11.0
-google-auth-oauthlib==0.5.2
-google-api-python-client==2.86.0
-ffmpeg-python==0.2.0  # If you are using ffmpeg Python bindings (optional, needed only if you're interacting with ffmpeg directly in Python)
+yt-dlp
+google-auth
+google-auth-oauthlib
+google-api-python-client
