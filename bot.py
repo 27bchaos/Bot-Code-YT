@@ -2,24 +2,34 @@ import os
 import random
 import time
 import subprocess
+from flask import Flask, Response
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from flask import Flask, Response
 
 app = Flask(__name__)
 
 # Path to your local music files
-MUSIC_DIR = './music_files'  # Replace this with your directory of music files
-
-# Get list of audio files
-AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '.flac'))]
+MUSIC_DIR = './music_files'  # Replace this with the directory where your music files are stored
 
 # Ensure the music directory exists
+if not os.path.isdir(MUSIC_DIR):
+    print(f"Error: Music directory {MUSIC_DIR} not found.")
+    exit()
+
+# Get list of audio files in the directory
+AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '.flac'))]
+
+# Ensure there are audio files available to stream
 if not AUDIO_FILES:
     print("No music files found in the specified directory.")
     exit()
 
-# Function to generate live stream from local files
+# YouTube Live Streaming setup (stream URL and stream key)
+# Replace 'YOUR_STREAM_KEY' with your actual stream key from YouTube
+RTMP_URL = 'rtmp://a.rtmp.youtube.com/live2/'
+STREAM_KEY = 'YOUR_STREAM_KEY'  # Replace with your actual stream key from YouTube
+
+# Function to generate and stream audio to YouTube
 def generate_audio():
     while True:
         # Randomly select an audio file from the list
@@ -28,12 +38,22 @@ def generate_audio():
 
         print(f"Streaming audio: {audio_file}")
 
-        # Using FFmpeg to stream the selected file
-        # Make sure that ffmpeg is installed and properly configured
+        # Using FFmpeg to stream the selected file to YouTube
         try:
-            ffmpeg_process = subprocess.Popen(['ffmpeg', '-re', '-i', audio_path, '-f', 'flv', 'rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY'],
-                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            ffmpeg_process.communicate()
+            ffmpeg_process = subprocess.Popen(
+                ['ffmpeg', '-re', '-i', audio_path, '-f', 'flv', 
+                 f'{RTMP_URL}{STREAM_KEY}'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+
+            # Read the output and error streams from FFmpeg
+            stdout, stderr = ffmpeg_process.communicate()
+
+            if stdout:
+                print(stdout.decode('utf-8'))
+            if stderr:
+                print(stderr.decode('utf-8'))
+            
         except Exception as e:
             print(f"Error while streaming audio file {audio_file}: {e}")
 
@@ -41,8 +61,8 @@ def generate_audio():
 
 @app.route('/stream')
 def stream_audio():
+    # Start streaming audio to the YouTube live stream
     return Response(generate_audio(), mimetype='audio/mpeg')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-
