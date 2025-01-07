@@ -26,7 +26,8 @@ def stream_audio():
         audio_file = random.choice(AUDIO_FILES)
         audio_path = os.path.join(MUSIC_DIR, audio_file)
 
-        print(f"Streaming audio: {audio_file}")
+        print(f"Selected audio file: {audio_file}")
+        print(f"Audio path: {audio_path}")
 
         # FFmpeg command to stream audio with static image
         ffmpeg_command = [
@@ -43,7 +44,8 @@ def stream_audio():
             rtmp_url  # RTMP stream URL
         ]
 
-        # Start the FFmpeg process
+        print(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
+
         try:
             ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = ffmpeg_process.communicate()
@@ -53,6 +55,7 @@ def stream_audio():
                 print(f"FFmpeg Error: {stderr.decode()}")
             else:
                 print(f"Successfully started streaming: {audio_file}")
+            print(f"FFmpeg Output: {stdout.decode()}")
 
         except Exception as e:
             print(f"Error while streaming audio file {audio_file}: {e}")
@@ -61,4 +64,5 @@ def stream_audio():
 
 # Start streaming
 if __name__ == "__main__":
+    print("Starting streaming process...")
     stream_audio()
