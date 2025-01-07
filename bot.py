@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 # Path to your local music files
 MUSIC_DIR = './music_files'  # Replace this with your directory of music files
+IMAGE_FILE = './static_image.png'  # Replace with your image file path (static image for video)
 
 # Get list of audio files
 AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '.flac'))]
@@ -16,10 +17,6 @@ AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '
 if not AUDIO_FILES:
     print("No music files found in the specified directory.")
     exit()
-
-# YouTube stream URL and key
-STREAM_KEY = 'crhj-bxgg-gaze-yu6v-237q'  # Your YouTube stream key
-rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
 # Function to generate live stream from local files
 def generate_audio():
@@ -30,12 +27,30 @@ def generate_audio():
 
         print(f"Streaming audio: {audio_file}")
 
-        # Using FFmpeg to stream the selected file
-        # Make sure that ffmpeg is installed and properly configured
+        # Using FFmpeg to stream the selected file with a static image
         try:
-            ffmpeg_process = subprocess.Popen(['ffmpeg', '-re', '-i', audio_path, '-f', 'flv', rtmp_url],
-                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            ffmpeg_process.communicate()
+            ffmpeg_command = [
+                'ffmpeg', 
+                '-re',  # Read input at native frame rate
+                '-i', audio_path,  # Input audio file
+                '-loop', '1',  # Loop the image
+                '-i', IMAGE_FILE,  # Input static image
+                '-c:v', 'libx264',  # Video codec
+                '-preset', 'veryfast',  # Encoding preset
+                '-c:a', 'aac',  # Audio codec
+                '-b:a', '128k',  # Audio bitrate
+                '-f', 'flv',  # Output format
+                'rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY'  # Replace with your YouTube stream key
+            ]
+            # Start the FFmpeg process
+            ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = ffmpeg_process.communicate()
+
+            # Check for errors
+            if ffmpeg_process.returncode != 0:
+                print(f"FFmpeg Error: {stderr.decode()}")
+            else:
+                print(f"Streaming audio file: {audio_file}")
         except Exception as e:
             print(f"Error while streaming audio file {audio_file}: {e}")
 
