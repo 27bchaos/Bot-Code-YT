@@ -1,5 +1,4 @@
 import os
-import random
 import time
 import subprocess
 import requests
@@ -60,6 +59,8 @@ def stream_audio():
             '-preset', 'veryfast',  # Encoding preset
             '-c:a', 'aac',  # Audio codec
             '-b:a', '128k',  # Audio bitrate
+            '-ar', '44100',  # Set audio sample rate (44.1 kHz)
+            '-ac', '2',  # Set number of audio channels (stereo)
             '-f', 'flv',  # Output format
             rtmp_url  # RTMP stream URL
         ]
