@@ -1,52 +1,43 @@
 import os
 import time
-import subprocess
-import yt_dlp
+from flask import Flask, Response
+import ffmpeg
 
-# Replace this with your own stream URL and Stream Key
-STREAM_URL = "rtmp://a.rtmp.youtube.com/live2"  # YouTube RTMP server
-STREAM_KEY = "YOUR_STREAM_KEY"  # Replace with your YouTube stream key
+app = Flask(__name__)
 
-# The YouTube video URL you want to stream
-VIDEO_URL = 'https://www.youtube.com/live/oAdtRhvliHw?feature=shared'  # Replace with your actual video URL
+# Directory containing your music files (replace with the actual path)
+MUSIC_DIR = '/path/to/your/music/files'
+AUDIO_FILES = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav', '.flac'))]
 
-def stream_video(video_url):
-    """Use yt-dlp to fetch the video stream and send it to YouTube Live using FFmpeg."""
-    # Use yt-dlp to get the best video and audio streams
-    ydl_opts = {
-        'format': 'bestaudio/best',  # Get the best audio and video streams
-        'outtmpl': '-',  # Output to stdout (pipe to FFmpeg)
-        'quiet': True,  # Disable yt-dlp logs
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(video_url, download=False)
-        print(f"Streaming video: {info_dict.get('title')}")
-
-        # Set up FFmpeg to stream the content to YouTube Live
-        ffmpeg_command = [
-            'ffmpeg',
-            '-re',  # Read input at native frame rate
-            '-i', '-',  # Input from the yt-dlp pipe (stdout)
-            '-c:v', 'libx264',  # Video codec (H.264)
-            '-c:a', 'aac',  # Audio codec (AAC)
-            '-b:a', '192k',  # Set audio bitrate
-            '-preset', 'veryfast',  # Encoding preset
-            '-f', 'flv',  # FLV format (required by RTMP)
-            f'{STREAM_URL}/{STREAM_KEY}'  # Your stream URL with key
-        ]
-
-        # Pipe the yt-dlp output to FFmpeg's input
-        process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE)
-        try:
-            ydl.download([video_url])  # Start streaming the video
+# Function to stream the audio files
+def stream_audio():
+    while True:
+        for file in AUDIO_FILES:
+            file_path = os.path.join(MUSIC_DIR, file)
+            # Using FFmpeg to convert audio file to a format suitable for streaming
+            process = (
+                ffmpeg
+                .input(file_path)
+                .output('pipe:1', format='mp3', acodec='libmp3lame', ar='44100', ac=2)
+                .run_async(pipe_stdout=True, pipe_stderr=True)
+            )
             while True:
-                time.sleep(60)  # Stream continuously
-        except KeyboardInterrupt:
-            print("Live stream ended.")
-        finally:
-            process.terminate()
+                # Yield the audio data to Flask for continuous streaming
+                data = process.stdout.read(1024)
+                if not data:
+                    break
+                yield data
+            process.stdout.close()
+            process.wait()
 
-if __name__ == "__main__":
-    # Start the live stream
-    stream_video(VIDEO_URL)
+        # Optional: Sleep before starting the next loop (adjust depending on how often you want to repeat the music)
+        time.sleep(5)
+
+# Route for the audio stream
+@app.route('/stream')
+def stream():
+    return Response(stream_audio(), content_type='audio/mpeg')
+
+# Start the Flask app
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000, threaded=True)
