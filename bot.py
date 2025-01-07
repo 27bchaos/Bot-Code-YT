@@ -27,7 +27,7 @@ if not AUDIO_FILES:
 # YouTube Live Streaming setup (stream URL and stream key)
 # Replace 'YOUR_STREAM_KEY' with your actual stream key from YouTube
 RTMP_URL = 'rtmp://a.rtmp.youtube.com/live2/'
-STREAM_KEY = 'YOUR_STREAM_KEY'  # Replace with your actual stream key from YouTube
+STREAM_KEY = 'crhj-bxgg-gaze-yu6v-237q'  # Replace with your actual stream key from YouTube
 
 # Function to generate and stream audio to YouTube
 def generate_audio():
