@@ -4,7 +4,7 @@ import subprocess
 import requests
 
 # Path to your static image
-IMAGE_FILE = './static_image.png'  # Replace with your image file path (static image for video)
+IMAGE_FILE = './static_images.png'  # Replace with your image file path (static image for video)
 
 # Google Drive File ID (replace this with your file ID from Google Drive URL)
 google_drive_audio_id = "10Dk1IwOW-p2CTzTkuCc4-JWdD_wRvtwi"  # Replace with your actual Google Drive file ID
