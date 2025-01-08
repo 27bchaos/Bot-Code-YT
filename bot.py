@@ -13,7 +13,7 @@ google_drive_audio_id = "10Dk1IwOW-p2CTzTkuCc4-JWdD_wRvtwi"  # Replace with your
 audio_url = f"https://drive.google.com/uc?export=download&id={google_drive_audio_id}"
 
 # Replace with your YouTube stream URL and stream key
-stream_key = "m5dp-tt7s-e18e-gze0-3gge"  # Replace with your actual stream key
+stream_key = "16ef-abm0-6aat-f5d6-3dv0"  # Replace with your actual stream key
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{stream_key}"
 
 # Directory for temporarily storing the downloaded audio
