@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 import requests
+from PIL import Image
 
 # Path to your static image
 IMAGE_FILE = './static_images.png'  # Replace with your image file path (static image for video)
@@ -36,6 +37,21 @@ def download_audio(url, file_path):
     else:
         print(f"Failed to download audio. Status code: {response.status_code}")
 
+# Function to resize the image to even dimensions for FFmpeg compatibility
+def resize_image(image_path):
+    with Image.open(image_path) as img:
+        width, height = img.size
+        # Ensure dimensions are even
+        new_width = width if width % 2 == 0 else width + 1
+        new_height = height if height % 2 == 0 else height + 1
+        
+        if (new_width, new_height) != (width, height):
+            print(f"Resizing image from {width}x{height} to {new_width}x{new_height}")
+            img = img.resize((new_width, new_height))
+            img.save(image_path)  # Save resized image back to disk
+        else:
+            print(f"Image already has even dimensions: {width}x{height}")
+
 # Function to stream audio with static image to YouTube via FFmpeg
 def stream_audio():
     while True:
@@ -47,6 +63,9 @@ def stream_audio():
 
         print(f"Selected audio file: song1.mp3")
         print(f"Audio path: {audio_file_path}")
+
+        # Resize image for compatibility with FFmpeg (even dimensions required)
+        resize_image(IMAGE_FILE)
 
         # FFmpeg command to stream audio with static image
         ffmpeg_command = [
