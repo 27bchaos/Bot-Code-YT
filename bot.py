@@ -54,23 +54,24 @@ def resize_image(image_path):
 
 # Function to stream audio with static image to YouTube via FFmpeg
 def stream_audio():
+    # Define the audio file path
+    audio_file_path = os.path.join(MUSIC_DIR, 'song1.mp3')
+
+    # Download the audio file from Google Drive
+    download_audio(audio_url, audio_file_path)
+
+    print(f"Selected audio file: song1.mp3")
+    print(f"Audio path: {audio_file_path}")
+
+    # Resize image for compatibility with FFmpeg (even dimensions required)
+    resize_image(IMAGE_FILE)
+
     while True:
-        # Define the audio file path
-        audio_file_path = os.path.join(MUSIC_DIR, 'song1.mp3')
-
-        # Download the audio file from Google Drive
-        download_audio(audio_url, audio_file_path)
-
-        print(f"Selected audio file: song1.mp3")
-        print(f"Audio path: {audio_file_path}")
-
-        # Resize image for compatibility with FFmpeg (even dimensions required)
-        resize_image(IMAGE_FILE)
-
         # FFmpeg command to stream audio with static image
         ffmpeg_command = [
             'ffmpeg', 
             '-re',  # Read input at native frame rate
+            '-stream_loop', '-1',  # Loop the audio file indefinitely
             '-i', audio_file_path,  # Input audio file
             '-loop', '1',  # Loop the image
             '-i', IMAGE_FILE,  # Input static image
