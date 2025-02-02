@@ -72,7 +72,7 @@ def stream_audio():
         time.sleep(5)  # Pause for 5 seconds before restarting the process
 
 # Replace with your YouTube stream URL and stream key
-stream_key = "16ef-abm0-6aat-f5d6-3dv0"  # Replace with your actual stream key
+stream_key = "mf0k-vv7a-rcb2-dcwe-az92  # Replace with your actual stream key
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{stream_key}"
 
 # Start streaming
