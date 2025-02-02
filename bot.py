@@ -1,38 +1,20 @@
 import os
 import time
 import subprocess
-import requests
 from PIL import Image
 
 # Path to your static image
 IMAGE_FILE = './static_images.png'  # Replace with your image file path (static image for video)
 
-# Google Drive File IDs
-google_drive_audio_ids = [
-    "10Dk1IwOW-p2CTzTkuCc4-JWdD_wRvtwi",  # Existing audio file
-    "1269zFPRC5BtsgT5l8n4WyXSRlE8FhyUO"  # New audio file
-]
+# Audio stream URL (Updated to use your URL)
+audio_stream_url = "https://prod-3-84-19-111.amperwave.net/audacy-wqalfmaac-imc"
 
-# Directory for temporarily storing the downloaded audio
+# Directory for temporarily storing the downloaded audio (if needed)
 MUSIC_DIR = './music_files'
 
 # Ensure the music directory exists
 if not os.path.exists(MUSIC_DIR):
     os.makedirs(MUSIC_DIR)
-
-# Function to download audio from Google Drive and save it locally
-def download_audio(audio_id, file_path):
-    audio_url = f"https://drive.google.com/uc?export=download&id={audio_id}"
-    print(f"Downloading audio from: {audio_url}")
-    response = requests.get(audio_url, stream=True)
-    
-    if response.status_code == 200:
-        with open(file_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print("Download complete.")
-    else:
-        print(f"Failed to download audio. Status code: {response.status_code}")
 
 # Function to resize the image to even dimensions for FFmpeg compatibility
 def resize_image(image_path):
@@ -49,57 +31,45 @@ def resize_image(image_path):
         else:
             print(f"Image already has even dimensions: {width}x{height}")
 
-# Function to stream audio with static image to YouTube via FFmpeg
+# Function to stream audio from URL with static image to YouTube via FFmpeg
 def stream_audio():
-    for audio_id in google_drive_audio_ids:
-        # Define the audio file path
-        audio_file_path = os.path.join(MUSIC_DIR, f'{audio_id}.mp3')
+    # Resize image for compatibility with FFmpeg (even dimensions required)
+    resize_image(IMAGE_FILE)
 
-        # Download the audio file from Google Drive
-        download_audio(audio_id, audio_file_path)
+    while True:
+        # FFmpeg command to stream audio from URL with static image
+        ffmpeg_command = [
+            'ffmpeg', 
+            '-i', audio_stream_url,  # Audio stream URL as input
+            '-loop', '1',  # Loop the image
+            '-i', IMAGE_FILE,  # Input static image
+            '-c:v', 'libx264',  # Video codec
+            '-preset', 'veryfast',  # Encoding preset
+            '-c:a', 'aac',  # Audio codec
+            '-b:a', '128k',  # Audio bitrate
+            '-ar', '44100',  # Set audio sample rate (44.1 kHz)
+            '-ac', '2',  # Set number of audio channels (stereo)
+            '-f', 'flv',  # Output format
+            rtmp_url  # RTMP stream URL
+        ]
 
-        print(f"Selected audio file: {audio_id}.mp3")
-        print(f"Audio path: {audio_file_path}")
+        print(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
 
-        # Resize image for compatibility with FFmpeg (even dimensions required)
-        resize_image(IMAGE_FILE)
+        try:
+            ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = ffmpeg_process.communicate()
 
-        while True:
-            # FFmpeg command to stream audio with static image
-            ffmpeg_command = [
-                'ffmpeg', 
-                '-re',  # Read input at native frame rate
-                '-stream_loop', '-1',  # Loop the audio file indefinitely
-                '-i', audio_file_path,  # Input audio file
-                '-loop', '1',  # Loop the image
-                '-i', IMAGE_FILE,  # Input static image
-                '-c:v', 'libx264',  # Video codec
-                '-preset', 'veryfast',  # Encoding preset
-                '-c:a', 'aac',  # Audio codec
-                '-b:a', '128k',  # Audio bitrate
-                '-ar', '44100',  # Set audio sample rate (44.1 kHz)
-                '-ac', '2',  # Set number of audio channels (stereo)
-                '-f', 'flv',  # Output format
-                rtmp_url  # RTMP stream URL
-            ]
+            # Check for errors and log them
+            if ffmpeg_process.returncode != 0:
+                print(f"FFmpeg Error: {stderr.decode()}")
+            else:
+                print(f"Successfully started streaming from: {audio_stream_url}")
+            print(f"FFmpeg Output: {stdout.decode()}")
 
-            print(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
+        except Exception as e:
+            print(f"Error while streaming audio: {e}")
 
-            try:
-                ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                stdout, stderr = ffmpeg_process.communicate()
-
-                # Check for errors and log them
-                if ffmpeg_process.returncode != 0:
-                    print(f"FFmpeg Error: {stderr.decode()}")
-                else:
-                    print(f"Successfully started streaming: {audio_id}.mp3")
-                print(f"FFmpeg Output: {stdout.decode()}")
-
-            except Exception as e:
-                print(f"Error while streaming audio: {e}")
-
-            time.sleep(5)  # Pause for 5 seconds before restarting the process
+        time.sleep(5)  # Pause for 5 seconds before restarting the process
 
 # Replace with your YouTube stream URL and stream key
 stream_key = "16ef-abm0-6aat-f5d6-3dv0"  # Replace with your actual stream key
